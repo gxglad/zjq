@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>至冬 · 永冬之国｜提瓦特北境地图档案</title>
+<meta name="description" content="至冬国 · 提瓦特大陆北部的永冬之国。点击地图上的光点，镜头会飞到那里，展开该地区的档案。">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#04080f">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="is-loading">
+
+<!-- ============================================================
+     A. 入场动画
+     ============================================================ -->
+<div class="intro" id="intro">
+  <canvas class="intro-canvas" id="introCanvas"></canvas>
+  <div class="intro-vig"></div>
+
+  <div class="intro-word" id="introWord">
+    <span class="iw-cn">至冬</span>
+    <span class="iw-en">S N E Z H N A Y A</span>
+  </div>
+
+  <div class="intro-foot">
+    <div class="intro-load">
+      <div class="il-bar"><i id="introBar"></i></div>
+      <div class="il-txt">
+        <span id="introPct">0</span><em>%</em>
+        <span class="il-dot">·</span>
+        <span id="introMsg">凝霜成核</span>
+      </div>
+    </div>
+    <button class="intro-skip" id="introSkip" type="button">跳过 ▸</button>
+  </div>
+
+  <div class="intro-flash" id="introFlash"></div>
+</div>
+
+<!-- ============================================================
+     B. 主舞台
+     ============================================================ -->
+<main class="app" id="app">
+
+  <!-- 地图（可拖拽 / 缩放 / 点击） -->
+  <div class="map-viewport" id="mapViewport">
+    <div class="map-grid"></div>
+    <div class="map-glow"></div>
+
+    <div class="map-stage" id="mapStage">
+      <img class="map-img" id="mapImg" src="assets/map/overview.webp" alt="至冬总览图" draggable="false">
+      <div class="map-tint"></div>
+      <div class="hotspots" id="hotspots"></div>
+    </div>
+
+    <!-- 标记点 → 档案卡的引线 -->
+    <svg class="link-layer" id="linkLayer" aria-hidden="true">
+      <path class="link-shadow" id="linkShadow"></path>
+      <path class="link-line" id="linkLine"></path>
+      <circle class="link-node" id="linkNode" r="4"></circle>
+    </svg>
+
+    <div class="map-vig"></div>
+  </div>
+
+  <canvas class="snow" id="snowCanvas"></canvas>
+
+  <!-- 顶部 HUD -->
+  <header class="hud" id="hud">
+    <div class="hud-left">
+      <div class="sigil" aria-hidden="true">
+        <svg viewBox="0 0 64 64">
+          <g fill="none" stroke="currentColor" stroke-width="1.1">
+            <circle cx="32" cy="32" r="29" opacity=".45"/>
+            <circle cx="32" cy="32" r="21" opacity=".3" stroke-dasharray="2 5"/>
+            <path d="M32 3v58M3 32h58M11.5 11.5l41 41M52.5 11.5l-41 41"/>
+            <path d="M32 8l5.5 18.5L56 32l-18.5 5.5L32 56l-5.5-18.5L8 32l18.5-5.5z" opacity=".85"/>
+          </g>
+        </svg>
+      </div>
+      <div class="hud-title">
+        <h1>至冬</h1>
+        <p class="hud-credit">技术支持：计算机223-11- 张佳琦</p>
+      </div>
+    </div>
+
+    <nav class="hud-nav">
+      <button type="button" class="hbtn" id="btnOverview">
+        <span class="hb-ico">⌖</span> 总览
+      </button>
+      <button type="button" class="hbtn" id="btnPrologue">
+        <span class="hb-ico">❖</span> 序章
+      </button>
+      <button type="button" class="hbtn hbtn-ghost" id="btnFull">
+        <span class="hb-ico">⛶</span> 全屏
+      </button>
+    </nav>
+  </header>
+
+  <!-- ==========================================================
+       C. 档案卡：贴在地图上的那个点旁边，随地图一起移动
+       ========================================================== -->
+  <article class="card" id="card" aria-hidden="true">
+    <span class="card-arrow" id="cardArrow"></span>
+    <div class="card-inner">
+      <button class="card-close" id="cardClose" type="button" aria-label="关闭">✕</button>
+
+      <figure class="card-hero">
+        <img id="cHero" src="" alt="">
+        <div class="ch-shade"></div>
+        <figcaption class="ch-cap">
+          <span class="ch-num" id="cNum">01</span>
+          <span class="ch-cat" id="cCat">宫殿 · 王座</span>
+        </figcaption>
+      </figure>
+
+      <div class="card-scroll" id="cardScroll">
+        <div class="c-head">
+          <h2 id="cName">极星的冰雪之宫</h2>
+          <div class="c-en" id="cEn">PALACE OF THE POLAR STAR</div>
+        </div>
+        <blockquote class="c-quote" id="cQuote"></blockquote>
+        <p class="c-text" id="cText"></p>
+        <div class="c-tags" id="cTags"></div>
+        <dl class="c-meta">
+          <div><dt>档案编号</dt><dd id="cMetaNum">01 / 09</dd></div>
+          <div><dt>类别</dt><dd id="cMetaCat">宫殿</dd></div>
+          <div><dt>图面坐标</dt><dd id="cMetaXY">44.5 / 28.5</dd></div>
+        </dl>
+      </div>
+
+      <div class="card-nav">
+        <button type="button" id="cPrev">‹ 上一处</button>
+        <button type="button" class="cn-all" id="cAll">返回全景</button>
+        <button type="button" id="cNext">下一处 ›</button>
+      </div>
+    </div>
+  </article>
+
+  <!-- 底部地区带 -->
+  <div class="strip" id="strip">
+    <div class="strip-head">
+      <span>地 区 索 引</span>
+      <span class="strip-count" id="stripCount">09</span>
+    </div>
+    <ol class="strip-list" id="stripList"></ol>
+  </div>
+
+  <!-- 坐标 / 缩放 -->
+  <div class="coord" id="coord">
+    <div class="coord-row"><b id="coordName">至冬 · 全景</b></div>
+    <div class="coord-row sm">
+      <span class="k">坐标</span><span class="v" id="coordXY">050.0 / 050.0</span>
+      <span class="k">视距</span><span class="v" id="coordZoom">1.00×</span>
+    </div>
+  </div>
+
+  <div class="zoom" id="zoom">
+    <button type="button" data-z="in" aria-label="放大">＋</button>
+    <div class="zoom-track"><i id="zoomFill"></i></div>
+    <button type="button" data-z="out" aria-label="缩小">－</button>
+    <button type="button" data-z="reset" class="z-reset" aria-label="复位">⌖</button>
+  </div>
+
+  <div class="hint" id="hint">拖拽平移 · 滚轮缩放 · 点地图上的光点看档案 · 点空白处返回</div>
+
+  <div class="rime" id="rime"><i></i><i></i><i></i></div>
+
+  <!-- 序章 -->
+  <div class="prologue" id="prologue">
+    <div class="pro-wrap" id="prologueBox">
+      <div class="pro-eyebrow">P R O L O G U E</div>
+      <h2 class="pro-title">位于提瓦特大陆北部的永冬之国</h2>
+      <div class="pro-rule"></div>
+      <p class="pro-text">
+        不畏苦寒、不惧厄难，迎着咆哮的漫天风雪，跨越沉寂肃穆的冻土与钢铁轰鸣的都市，直抵无神怜爱的严冬。抬起头来仰望无垢的苍星吧，纵然极寒早已吹熄往日的温存——与心怀炽烈欲望与哀思的人们一同，见证旧世界在冰上燃烧的那一刻吧。
+      </p>
+      <div class="pro-stats">
+        <div><b>09</b><span>登记地区</span></div>
+        <div><b>永冬</b><span>气候形态</span></div>
+        <div><b>北境</b><span>大陆方位</span></div>
+      </div>
+      <p class="pro-tip">点击地图上的光点 → 镜头会飞到那里，并在旁边展开该地区的档案</p>
+      <button class="pro-close" id="proClose" type="button">进入地图</button>
+    </div>
+  </div>
+
+  <footer class="sig">至冬档案 · 技术支持：计算机223-11- 张佳琦 · 文案与图像取自「至冬资料」</footer>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
